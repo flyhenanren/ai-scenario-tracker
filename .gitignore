@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Data
+data/*.db
+data/*.db-journal
+
+# Claude Code
+.claude/
+mcp.log
+
+# Playwright
+e2e/node_modules/
+e2e/playwright-report/
+e2e/test-results/
+.playwright-mcp/
+
+# Misc
+=2.10
+*.log

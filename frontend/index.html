@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI场景评估追踪系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/frontend/css/styles.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 顶部导航 -->
+    <nav class="bg-indigo-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-robot text-2xl"></i>
+                    <h1 id="nav-home" class="text-xl font-bold cursor-pointer hover:text-indigo-200">AI场景评估追踪系统</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="nav-overview" class="nav-btn active">
+                        <i class="fas fa-list mr-2"></i>总览
+                    </button>
+                    <button id="nav-form" class="nav-btn">
+                        <i class="fas fa-plus-circle mr-2"></i>新建填报
+                    </button>
+                    <button id="nav-progress" class="nav-btn">
+                        <i class="fas fa-chart-line mr-2"></i>进度跟踪
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        <!-- 总览界面 -->
+        <div id="view-overview" class="view">
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">总场景数</p>
+                            <p id="stat-total" class="text-3xl font-bold text-indigo-600">0</p>
+                        </div>
+                        <i class="fas fa-folder-open text-indigo-100 text-4xl"></i>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">推进中</p>
+                            <p id="stat-active" class="text-3xl font-bold text-green-600">0</p>
+                        </div>
+                        <i class="fas fa-spinner text-green-100 text-4xl"></i>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">需跟进</p>
+                            <p id="stat-followup" class="text-3xl font-bold text-yellow-600">0</p>
+                        </div>
+                        <i class="fas fa-bell text-yellow-100 text-4xl"></i>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">超期</p>
+                            <p id="stat-overdue" class="text-3xl font-bold text-red-600">0</p>
+                        </div>
+                        <i class="fas fa-exclamation-triangle text-red-100 text-4xl"></i>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">已完成</p>
+                            <p id="stat-completed" class="text-3xl font-bold text-blue-600">0</p>
+                        </div>
+                        <i class="fas fa-check-circle text-blue-100 text-4xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 本地草稿区域 -->
+            <div id="drafts-section" class="hidden bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-medium text-yellow-800">
+                        <i class="fas fa-save mr-2"></i>本地草稿
+                    </h3>
+                    <button id="btn-hide-drafts" class="text-sm text-yellow-600 hover:text-yellow-800">
+                        <i class="fas fa-times mr-1"></i>关闭
+                    </button>
+                </div>
+                <div id="drafts-list" class="space-y-2"></div>
+            </div>
+
+            <!-- 筛选栏 -->
+            <div class="bg-white rounded-lg shadow p-4 mb-6">
+                <div class="flex flex-wrap gap-4 items-center">
+                    <div class="flex items-center space-x-2">
+                        <label class="text-gray-600 text-sm">部门:</label>
+                        <select id="filter-dept" class="border rounded px-3 py-1.5 text-sm">
+                            <option value="">全部</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-gray-600 text-sm">成熟度:</label>
+                        <select id="filter-maturity" class="border rounded px-3 py-1.5 text-sm">
+                            <option value="">全部</option>
+                            <option value="1">L1 概念阶段</option>
+                            <option value="2">L2 试用阶段</option>
+                            <option value="3">L3 试点阶段</option>
+                            <option value="4">L4 推广阶段</option>
+                            <option value="5">L5 机制化阶段</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-gray-600 text-sm">生命周期:</label>
+                        <select id="filter-lifecycle" class="border rounded px-3 py-1.5 text-sm">
+                            <option value="">全部</option>
+                            <option value="对接中">对接中</option>
+                            <option value="评估中">评估中</option>
+                            <option value="推进中">推进中</option>
+                            <option value="暂停">暂停</option>
+                            <option value="已完成">已完成</option>
+                            <option value="已废弃">已废弃</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-gray-600 text-sm">分类:</label>
+                        <select id="filter-category" class="border rounded px-3 py-1.5 text-sm">
+                            <option value="">全部</option>
+                            <option value="A">A类</option>
+                            <option value="B">B类</option>
+                            <option value="C">C类</option>
+                        </select>
+                    </div>
+                    <button id="btn-reset-filter" class="ml-auto px-4 py-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 text-sm">
+                        <i class="fas fa-redo mr-1"></i>重置
+                    </button>
+                </div>
+            </div>
+
+            <!-- 场景列表 -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">场景编号</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">场景名称</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">部门</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">成熟度</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">分类</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">评分</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">下次跟进</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scenario-list" class="bg-white divide-y divide-gray-200">
+                            <!-- 动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="empty-state" class="hidden p-12 text-center text-gray-500">
+                    <i class="fas fa-inbox text-5xl mb-4 text-gray-300"></i>
+                    <p>暂无场景数据</p>
+                    <button id="btn-create-first" class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                        <i class="fas fa-plus mr-2"></i>创建第一个场景
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 填报界面 -->
+        <div id="view-form" class="view hidden">
+            <div class="bg-white rounded-lg shadow">
+                <!-- 头部 -->
+                <div class="border-b px-6 py-4 flex justify-between items-center">
+                    <h2 id="form-title" class="text-xl font-semibold text-gray-800">
+                        <i class="fas fa-edit mr-2 text-indigo-600"></i>新建场景
+                    </h2>
+                    <div class="flex items-center space-x-3">
+                        <button id="btn-form-back" class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
+                            <i class="fas fa-arrow-left mr-1"></i>返回
+                        </button>
+                        <button id="btn-draft" class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
+                            <i class="fas fa-save mr-1"></i>暂存本地
+                        </button>
+                        <button id="btn-submit" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                            <i class="fas fa-cloud-upload-alt mr-1"></i>保存到服务器
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab导航 -->
+                <div class="border-b px-6">
+                    <div class="flex space-x-6" id="form-tabs">
+                        <button class="form-tab active" data-tab="basic">基本信息</button>
+                        <button class="form-tab" data-tab="progress">现状与进展</button>
+                        <button class="form-tab" data-tab="value">价值评估</button>
+                        <button class="form-tab" data-tab="input">投入产出</button>
+                        <button class="form-tab" data-tab="conclusion">评估结论</button>
+                        <button class="form-tab" data-tab="plan">推进建议</button>
+                    </div>
+                </div>
+
+                <!-- 表单内容 -->
+                <form id="scenario-form" class="p-6">
+                    <input type="hidden" id="form-scene-id">
+
+                    <!-- 基本信息 Tab -->
+                    <div class="form-section active" data-section="basic">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">场景名称 <span class="text-red-500">*</span></label>
+                                <input type="text" id="f-name" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">所属小组</label>
+                                <input type="text" id="f-group_name" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">来源部门 <span class="text-red-500">*</span></label>
+                                <input type="text" id="f-source_dept" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">填报人</label>
+                                <input type="text" id="f-reporter" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">联系方式</label>
+                                <input type="text" id="f-contact" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">填报人联系方式</label>
+                                <input type="text" id="f-contact_ext" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">业务背景</label>
+                                <textarea id="f-business_background" rows="3" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="该场景所在业务环节、岗位参与、主要工作内容和流程"></textarea>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">现存问题（可多选）</label>
+                                <div class="flex flex-wrap gap-3">
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="existing_problems" value="人工投入大" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">人工投入大</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="existing_problems" value="响应慢" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">响应慢</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="existing_problems" value="质量不稳定" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">质量不稳定</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="existing_problems" value="依赖个人经验" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">依赖个人经验</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="existing_problems" value="重复性高" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">重复性高</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="existing_problems" value="数据分散" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">数据分散</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="existing_problems" value="其他" class="w-4 h-4 text-indigo-600 rounded" id="chk-other-problem" onchange="toggleOtherProblem()">
+                                        <span class="text-sm text-gray-600">其他</span>
+                                    </label>
+                                </div>
+                                <div id="div-other-problem-reason" class="hidden mt-2">
+                                    <input type="text" id="f-other_problem_reason" class="w-full border rounded px-3 py-2 text-sm" placeholder="请输入其他原因">
+                                </div>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">引入AI的目标</label>
+                                <textarea id="f-ai_goals" rows="2" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="希望提升什么、解决什么核心矛盾、最终想形成什么能力或结果"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">业务参与人员</label>
+                                <input type="text" id="f-business_participants" class="w-full border rounded px-3 py-2" placeholder="负责人/参与人员">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">参与岗位</label>
+                                <input type="text" id="f-participating_posts" class="w-full border rounded px-3 py-2" placeholder="参与的岗位">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">主要工作内容和流程简述</label>
+                                <textarea id="f-business_flow" rows="2" class="w-full border rounded px-3 py-2" placeholder="该场景的主要工作内容和流程"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">是否与已有场景重复</label>
+                                <div class="flex items-center space-x-4 mt-2">
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="radio" name="is_repeat" value="false" checked class="w-4 h-4 text-indigo-600" onchange="hideRepeatSelector()">
+                                        <span class="text-sm">否</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="radio" name="is_repeat" value="true" class="w-4 h-4 text-indigo-600" onchange="showRepeatSelector()">
+                                        <span class="text-sm">是（点击选择场景）</span>
+                                    </label>
+                                </div>
+                                <input type="hidden" id="f-repeat_codes" value="">
+                                <div id="div-repeat-selector" class="hidden mt-2 p-3 bg-yellow-50 rounded border border-yellow-200">
+                                    <p class="text-sm text-yellow-700">已选择重复场景：<span id="selected-repeat-code" class="font-medium">-</span></p>
+                                    <button type="button" onclick="FormView.showScenarioSelector()" class="mt-2 px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700">
+                                        <i class="fas fa-search mr-1"></i>重新选择
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">下次跟进时间</label>
+                                <input type="date" id="f-next_followup_date" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 现状与进展 Tab -->
+                    <div class="form-section hidden" data-section="progress">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">当前应用现状</label>
+                                <div class="mt-2 space-y-2">
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="radio" name="current_status" value="无项目" id="status-no-project" class="w-4 h-4 text-indigo-600" onchange="toggleProjectStatus()">
+                                        <span class="text-sm">暂无项目在用</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="radio" name="current_status" value="已有项目" id="status-has-project" class="w-4 h-4 text-indigo-600" onchange="toggleProjectStatus()">
+                                        <span class="text-sm">已有项目在用</span>
+                                    </label>
+                                </div>
+                                <div id="div-current-project-desc" class="hidden mt-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">项目说明</label>
+                                    <textarea id="f-current_project_desc" rows="2" class="w-full border rounded px-3 py-2 text-sm" placeholder="简要说明已有项目的情况"></textarea>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">成熟度判断</label>
+                                <select id="f-maturity_level" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="1">L1 概念阶段 - 只有想法，尚未验证</option>
+                                    <option value="2">L2 试用阶段 - 已有项目/局部尝试</option>
+                                    <option value="3">L3 试点阶段 - 有明确场景和初步结果</option>
+                                    <option value="4">L4 推广阶段 - 可复制到更多项目/部门</option>
+                                    <option value="5">L5 机制化阶段 - 已纳入标准流程并持续优化</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">生命周期状态</label>
+                                <select id="f-lifecycle_status" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="对接中">对接中</option>
+                                    <option value="评估中">评估中</option>
+                                    <option value="推进中">推进中</option>
+                                    <option value="暂停">暂停</option>
+                                    <option value="已完成">已完成</option>
+                                    <option value="已废弃">已废弃</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">负责人状态</label>
+                                <select id="f-director_status" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="0">未指定</option>
+                                    <option value="1">模糊</option>
+                                    <option value="2">无人负责</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">负责人姓名</label>
+                                <input type="text" id="f-director_name" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">已取得进展</label>
+                                <textarea id="f-progress" rows="2" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="已有成果资料收集整理"></textarea>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">当前存在问题</label>
+                                <textarea id="f-current_problems" rows="2" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="重点写下一步改进方向"></textarea>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">负责人情况说明</label>
+                                <textarea id="f-director_note" rows="2" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="当负责人状态为模糊或无人负责时，请填写情况说明"></textarea>
+                            </div>
+                            <div id="div-revival-path" class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">已完工未应用项目的盘活路径（仅当"已有项目在用"时填写）</label>
+                                <div class="flex flex-wrap gap-3">
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="revival_path_options" value="找到原开发者" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">找到原开发者，确认停摆原因</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="revival_path_options" value="确认实际需求" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">与业务部门确认是否有实际需求</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="revival_path_options" value="评估重构" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">评估是否需要重构，还是只需部署推广</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="revival_path_options" value="确认新负责人" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">确认新的负责人</span>
+                                    </label>
+                                </div>
+                                <div class="mt-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">盘活结论</label>
+                                    <input type="text" id="f-revival_conclusion" class="w-full border rounded px-3 py-2 text-sm" placeholder="盘活结论">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 价值评估 Tab -->
+                    <div class="form-section hidden" data-section="value">
+                        <p class="text-sm text-gray-500 mb-4">评分说明：1=极低，2=低，3=中，4=高，5=极高</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">业务价值</label>
+                                <div class="flex items-center space-x-4 mt-1">
+                                    <input type="range" id="f-biz_value_score" min="1" max="5" value="3" class="flex-1">
+                                    <span id="biz_value_display" class="w-8 text-center font-bold text-indigo-600">3</span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">是否直接支撑核心业务目标</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">痛点强度</label>
+                                <div class="flex items-center space-x-4 mt-1">
+                                    <input type="range" id="f-pain_point_score" min="1" max="5" value="3" class="flex-1">
+                                    <span id="pain_point_display" class="w-8 text-center font-bold text-indigo-600">3</span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">问题是否真实存在且普遍</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">应用频率</label>
+                                <div class="flex items-center space-x-4 mt-1">
+                                    <input type="range" id="f-frequency_score" min="1" max="5" value="3" class="flex-1">
+                                    <span id="frequency_display" class="w-8 text-center font-bold text-indigo-600">3</span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">场景发生是否高频，覆盖人数是否足够大</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">可落地性</label>
+                                <div class="flex items-center space-x-4 mt-1">
+                                    <input type="range" id="f-feasibility_score" min="1" max="5" value="3" class="flex-1">
+                                    <span id="feasibility_display" class="w-8 text-center font-bold text-indigo-600">3</span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">是否有数据、流程、人员基础</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">可复制性</label>
+                                <div class="flex items-center space-x-4 mt-1">
+                                    <input type="range" id="f-replicability_score" min="1" max="5" value="3" class="flex-1">
+                                    <span id="replicability_display" class="w-8 text-center font-bold text-indigo-600">3</span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">能否从一个团队扩展到多个团队</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">AI适配度</label>
+                                <div class="flex items-center space-x-4 mt-1">
+                                    <input type="range" id="f-ai_fit_score" min="1" max="5" value="3" class="flex-1">
+                                    <span id="ai_fit_display" class="w-8 text-center font-bold text-indigo-600">3</span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">AI相比传统规则是否有明显优势</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">风险可控性</label>
+                                <div class="flex items-center space-x-4 mt-1">
+                                    <input type="range" id="f-risk_control_score" min="1" max="5" value="3" class="flex-1">
+                                    <span id="risk_control_display" class="w-8 text-center font-bold text-indigo-600">3</span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">数据安全、合规、准确性等是否可控</p>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="bg-indigo-50 px-6 py-4 rounded-lg">
+                                    <p class="text-sm text-gray-600">总分</p>
+                                    <p id="total-score-display" class="text-4xl font-bold text-indigo-600">21</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 投入产出 Tab -->
+                    <div class="form-section hidden" data-section="input">
+                        <div class="grid grid-cols-1 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">预期收益（多明细）</label>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">预计节省工时</label>
+                                        <input type="text" id="f-expected_saved_hours" class="w-full border rounded px-3 py-2 text-sm" placeholder="如：100人天/月">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">预计提升效率</label>
+                                        <input type="text" id="f-expected_efficiency" class="w-full border rounded px-3 py-2 text-sm" placeholder="如：处理时间缩短50%">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">预计提升质量</label>
+                                        <input type="text" id="f-expected_quality" class="w-full border rounded px-3 py-2 text-sm" placeholder="如：准确率提升至95%">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">预计降低差错/风险</label>
+                                        <input type="text" id="f-expected_risk_reduction" class="w-full border rounded px-3 py-2 text-sm" placeholder="如：减少90%人工错误">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs text-gray-500 mb-1">预计形成的组织能力沉淀</label>
+                                        <input type="text" id="f-expected_org_capability" class="w-full border rounded px-3 py-2 text-sm" placeholder="如：积累1000+条知识库条目">
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">所需投入（多明细）</label>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">人员投入</label>
+                                        <input type="text" id="f-investment_personnel" class="w-full border rounded px-3 py-2 text-sm" placeholder="如：2人/月">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">时间周期</label>
+                                        <input type="text" id="f-investment_timeline" class="w-full border rounded px-3 py-2 text-sm" placeholder="如：3个月">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">工具/系统成本</label>
+                                        <input type="text" id="f-investment_tools" class="w-full border rounded px-3 py-2 text-sm" placeholder="如：API调用费用">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">数据整理成本</label>
+                                        <input type="text" id="f-investment_data" class="w-full border rounded px-3 py-2 text-sm" placeholder="如：数据标注费用">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs text-gray-500 mb-1">跨部门协同成本</label>
+                                        <input type="text" id="f-investment_coordination" class="w-full border rounded px-3 py-2 text-sm" placeholder="如：需协调3个部门">
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">ROI综合判断</label>
+                                <div class="flex flex-wrap gap-3">
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="radio" name="roi_judgment" value="高收益/低投入" class="w-4 h-4 text-indigo-600">
+                                        <span class="text-sm">高收益 / 低投入</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="radio" name="roi_judgment" value="高收益/高投入" class="w-4 h-4 text-indigo-600">
+                                        <span class="text-sm">高收益 / 高投入</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="radio" name="roi_judgment" value="中收益/中投入" class="w-4 h-4 text-indigo-600">
+                                        <span class="text-sm">中收益 / 中投入</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="radio" name="roi_judgment" value="低收益/高投入" class="w-4 h-4 text-indigo-600">
+                                        <span class="text-sm">低收益 / 高投入</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 评估结论 Tab -->
+                    <div class="form-section hidden" data-section="conclusion">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">评估结论</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center space-x-2 cursor-pointer p-3 bg-green-50 rounded-lg border border-green-200 hover:bg-green-100">
+                                        <input type="radio" name="category" value="A" class="w-4 h-4 text-indigo-600">
+                                        <div>
+                                            <span class="text-sm font-medium text-green-800">A类：核心投入，优先推进</span>
+                                            <p class="text-xs text-green-600">业务价值高、需求真实高频、已有基础</p>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer p-3 bg-yellow-50 rounded-lg border border-yellow-200 hover:bg-yellow-100">
+                                        <input type="radio" name="category" value="B" class="w-4 h-4 text-indigo-600">
+                                        <div>
+                                            <span class="text-sm font-medium text-yellow-800">B类：试点观察，择机推进</span>
+                                            <p class="text-xs text-yellow-600">有潜力但条件暂不成熟</p>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100">
+                                        <input type="radio" name="category" value="C" class="w-4 h-4 text-indigo-600">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-800">C类：暂缓投入，暂不立项</span>
+                                            <p class="text-xs text-gray-600">业务价值有限、AI不一定是最佳解</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">结论理由</label>
+                                <textarea id="f-category_reason" rows="4" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                                <div class="mt-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">业务部门配合意愿</label>
+                                    <select id="f-cooperation_willingness" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                        <option value="0">未知</option>
+                                        <option value="1">低</option>
+                                        <option value="2">中</option>
+                                        <option value="3">高</option>
+                                    </select>
+                                </div>
+                                <div class="mt-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">内部优先级</label>
+                                    <input type="number" id="f-internal_priority" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="数值越大优先级越高">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 推进建议 Tab -->
+                    <div class="form-section hidden" data-section="plan">
+                        <div class="grid grid-cols-1 gap-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">1个月目标</label>
+                                    <textarea id="f-goal_1month" rows="2" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">3个月目标</label>
+                                    <textarea id="f-goal_3month" rows="2" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">所需支持（可多选）</label>
+                                <div class="flex flex-wrap gap-3">
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="required_support" value="管理支持" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">管理支持</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="required_support" value="数据权限" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">数据权限</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="required_support" value="IT/系统支持" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">IT/系统支持</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="required_support" value="业务部门配合" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">业务部门配合</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="required_support" value="工具预算" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">工具预算</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="required_support" value="制度保障" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">制度保障</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">推进路径（可多选）</label>
+                                <div class="flex flex-wrap gap-3">
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="promotion_path_options" value="梳理流程" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">梳理流程</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="promotion_path_options" value="明确场景边界" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">明确场景边界</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="promotion_path_options" value="选定试点任务" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">选定试点任务</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="promotion_path_options" value="建立样例库" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">建立样例库/Prompt库/知识库</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="promotion_path_options" value="小范围试用" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">小范围试用</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="promotion_path_options" value="评估效果" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">评估效果</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" name="promotion_path_options" value="决定是否推广" class="w-4 h-4 text-indigo-600 rounded">
+                                        <span class="text-sm text-gray-600">决定是否推广</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">里程碑设置</label>
+                                <div id="milestone-container" class="space-y-2">
+                                    <!-- 动态添加里程碑 -->
+                                </div>
+                                <button type="button" id="btn-add-milestone" class="mt-2 px-3 py-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 text-sm">
+                                    <i class="fas fa-plus mr-1"></i>添加里程碑
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 进度跟踪界面 -->
+        <div id="view-progress" class="view hidden">
+            <div class="bg-white rounded-lg shadow">
+                <div class="border-b px-6 py-4">
+                    <h2 class="text-xl font-semibold text-gray-800">
+                        <i class="fas fa-chart-line mr-2 text-indigo-600"></i>进度跟踪
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <!-- 告警列表 -->
+                    <div id="overdue-list" class="mb-6">
+                        <h3 class="text-lg font-medium text-red-600 mb-3">
+                            <i class="fas fa-exclamation-circle mr-2"></i>需要跟进
+                        </h3>
+                        <div id="overdue-items" class="space-y-3">
+                            <!-- 动态填充 -->
+                        </div>
+                        <div id="no-overdue" class="hidden p-6 bg-gray-50 rounded-lg text-center text-gray-500">
+                            <i class="fas fa-check-circle text-3xl mb-2 text-green-400"></i>
+                            <p>暂无需要跟进的场景</p>
+                        </div>
+                    </div>
+
+                    <!-- 时间线视图 -->
+                    <div class="mt-8">
+                        <h3 class="text-lg font-medium text-gray-800 mb-3">
+                            <i class="fas fa-clock mr-2"></i>场景时间线
+                        </h3>
+                        <div id="timeline-container" class="space-y-4">
+                            <!-- 动态填充 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 单场景完整视图 -->
+        <div id="view-detail" class="view hidden">
+            <div class="bg-white rounded-lg shadow">
+                <div class="border-b px-6 py-4 flex justify-between items-center">
+                    <h2 class="text-xl font-semibold text-gray-800">
+                        <i class="fas fa-file-alt mr-2 text-indigo-600"></i>
+                        <span id="detail-title">场景详情</span>
+                    </h2>
+                    <div class="flex items-center space-x-3">
+                        <button id="btn-export-detail" class="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700">
+                            <i class="fas fa-file-export mr-1"></i>导出报告
+                        </button>
+                        <button id="btn-edit-detail" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                            <i class="fas fa-edit mr-1"></i>编辑
+                        </button>
+                        <button id="btn-followup-detail" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                            <i class="fas fa-plus mr-1"></i>填写跟进
+                        </button>
+                        <button id="btn-back-list" class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
+                            <i class="fas fa-arrow-left mr-1"></i>返回
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- 左侧：基本信息 -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-indigo-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-600">场景编号</p>
+                                    <p id="detail-code" class="text-lg font-semibold text-indigo-700">-</p>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-600">成熟度</p>
+                                    <p id="detail-maturity" class="text-lg font-semibold text-green-700">-</p>
+                                </div>
+                                <div class="bg-yellow-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-600">分类</p>
+                                    <p id="detail-category" class="text-lg font-semibold text-yellow-700">-</p>
+                                </div>
+                                <div class="bg-blue-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-600">综合评分</p>
+                                    <p id="detail-score" class="text-lg font-semibold text-blue-700">-</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-700 mb-2">基本信息</h4>
+                                <div class="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
+                                    <p><span class="text-gray-500">场景名称：</span><span id="detail-name" class="font-medium">-</span></p>
+                                    <p><span class="text-gray-500">来源部门：</span><span id="detail-dept">-</span></p>
+                                    <p><span class="text-gray-500">填报人：</span><span id="detail-reporter">-</span></p>
+                                    <p><span class="text-gray-500">生命周期：</span><span id="detail-lifecycle">-</span></p>
+                                    <p><span class="text-gray-500">业务部门配合意愿：</span><span id="detail-willingness">-</span></p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-700 mb-2">业务背景</h4>
+                                <p id="detail-background" class="bg-gray-50 p-4 rounded-lg text-sm text-gray-600">-</p>
+                            </div>
+
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-700 mb-2">引入AI的目标</h4>
+                                <p id="detail-goals" class="bg-gray-50 p-4 rounded-lg text-sm text-gray-600">-</p>
+                            </div>
+
+                            <!-- 里程碑进度 -->
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-700 mb-2">里程碑进度</h4>
+                                <div id="detail-milestones" class="space-y-2">
+                                    <!-- 动态填充 -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 右侧：跟进记录 -->
+                        <div class="lg:col-span-1">
+                            <h4 class="text-sm font-medium text-gray-700 mb-2">跟进记录</h4>
+                            <div id="detail-followups" class="space-y-3 max-h-96 overflow-y-auto">
+                                <!-- 动态填充 -->
+                            </div>
+                            <div id="no-followups" class="hidden p-4 bg-gray-50 rounded-lg text-center text-gray-500 text-sm">
+                                暂无跟进记录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast 容器 -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+    <!-- Modal 容器 -->
+    <div id="modal-container" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center">
+        <div id="modal-content" class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
+            <!-- 动态内容 -->
+        </div>
+    </div>
+
+    <!-- 场景选择器 Modal -->
+    <div id="scenario-selector-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+            <div class="border-b px-6 py-4 flex justify-between items-center sticky top-0 bg-white">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-search mr-2 text-indigo-600"></i>选择重复场景
+                </h3>
+                <button id="btn-close-scenario-selector" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 border-b">
+                <input type="text" id="scenario-search-input" class="w-full border rounded px-3 py-2" placeholder="输入场景名称或编号搜索...">
+            </div>
+            <div id="scenario-selector-list" class="flex-1 overflow-y-auto p-4 space-y-2">
+                <!-- 动态填充 -->
+            </div>
+            <div class="border-t px-6 py-4 bg-gray-50">
+                <p class="text-sm text-gray-500">选择后，当前场景将标记为与所选场景重复</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 跟进表单 Modal -->
+    <div id="followup-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="border-b px-6 py-4 flex justify-between items-center sticky top-0 bg-white">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-plus mr-2 text-green-600"></i>填写跟进记录
+                </h3>
+                <button id="btn-close-followup" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="followup-form" class="p-6 space-y-4">
+                <input type="hidden" id="fu-scene-id">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">跟进人</label>
+                        <input type="text" id="fu-followup_by" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">跟进间隔</label>
+                        <select id="fu-interval_type" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="1个月">1个月</option>
+                            <option value="2个月">2个月</option>
+                            <option value="超过2个月">超过2个月</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">生命周期状态</label>
+                        <select id="fu-lifecycle_status" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="对接中">对接中</option>
+                            <option value="评估中">评估中</option>
+                            <option value="推进中">推进中</option>
+                            <option value="暂停">暂停</option>
+                            <option value="已完成">已完成</option>
+                            <option value="已废弃">已废弃</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">成熟度</label>
+                        <select id="fu-maturity_level" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="1">L1 概念阶段</option>
+                            <option value="2">L2 试用阶段</option>
+                            <option value="3">L3 试点阶段</option>
+                            <option value="4">L4 推广阶段</option>
+                            <option value="5">L5 机制化阶段</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">分类</label>
+                        <select id="fu-category" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">保持不变</option>
+                            <option value="A">A类</option>
+                            <option value="B">B类</option>
+                            <option value="C">C类</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">配合意愿</label>
+                        <select id="fu-cooperation_willingness" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="0">未知</option>
+                            <option value="1">低</option>
+                            <option value="2">中</option>
+                            <option value="3">高</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">本次主要进展</label>
+                    <textarea id="fu-progress_summary" rows="2" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">本次主要问题</label>
+                    <textarea id="fu-problems" rows="2" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">下一步计划</label>
+                    <textarea id="fu-next_plan" rows="2" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">下次跟进时间</label>
+                    <input type="date" id="fu-next_followup_date" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" id="btn-cancel-followup" class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
+                        取消
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                        <i class="fas fa-save mr-1"></i>保存跟进
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/frontend/js/api.js"></script>
+    <script src="/frontend/js/components/toast.js"></script>
+    <script src="/frontend/js/components/modal.js"></script>
+    <script src="/frontend/js/router.js"></script>
+    <script src="/frontend/js/views/overview.js"></script>
+    <script src="/frontend/js/views/form.js"></script>
+    <script src="/frontend/js/views/progress.js"></script>
+    <script src="/frontend/js/views/detail.js"></script>
+    <script src="/frontend/js/app.js"></script>
+    <script>
+        // 切换"其他"问题原因输入框
+        function toggleOtherProblem() {
+            const chk = document.getElementById('chk-other-problem');
+            const div = document.getElementById('div-other-problem-reason');
+            if (chk && div) {
+                div.classList.toggle('hidden', !chk.checked);
+            }
+        }
+
+        // 切换"当前应用现状"说明输入框
+        function toggleProjectStatus() {
+            const statusHasProject = document.getElementById('status-has-project');
+            const divProjectDesc = document.getElementById('div-current-project-desc');
+            const divRevivalPath = document.getElementById('div-revival-path');
+            if (statusHasProject && divProjectDesc) {
+                const isChecked = statusHasProject.checked;
+                divProjectDesc.classList.toggle('hidden', !isChecked);
+                if (divRevivalPath) {
+                    divRevivalPath.classList.toggle('hidden', !isChecked);
+                }
+            }
+        }
+
+        // 显示重复场景选择器
+        function showRepeatSelector() {
+            const div = document.getElementById('div-repeat-selector');
+            if (div) div.classList.remove('hidden');
+            FormView.showScenarioSelector();
+        }
+
+        // 隐藏重复场景选择器
+        function hideRepeatSelector() {
+            const div = document.getElementById('div-repeat-selector');
+            if (div) div.classList.add('hidden');
+            document.getElementById('f-repeat_codes').value = '';
+        }
+    </script>
+</body>
+</html>
