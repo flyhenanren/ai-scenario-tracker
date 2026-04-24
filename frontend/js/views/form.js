@@ -56,6 +56,9 @@ const FormView = {
             const scenario = await API.getScenario(this.sceneId);
             this.sceneCode = scenario.scene_code;
 
+            // 重置所有可能残留状态的表单控件
+            this.resetFormState();
+
             // 填充表单
             document.getElementById('form-scene-id').value = scenario.id;
 
@@ -133,10 +136,9 @@ const FormView = {
                 const radio = document.querySelector(`input[name="roi_judgment"][value="${scenario.roi_judgment}"]`);
                 if (radio) radio.checked = true;
             }
-            if (scenario.category) {
-                const radio = document.querySelector(`input[name="category"][value="${scenario.category}"]`);
-                if (radio) radio.checked = true;
-            }
+            // 评估结论 category - 直接设置，不依赖旧值
+            const categoryRadio = document.querySelector(`input[name="category"][value="${scenario.category || ''}"]`);
+            if (categoryRadio) categoryRadio.checked = true;
 
             // 当前应用现状
             if (scenario.current_project_status) {
@@ -219,6 +221,30 @@ const FormView = {
         document.getElementById('f-next_followup_date').value = nextMonth.toISOString().split('T')[0];
     },
 
+    // 重置表单控件状态（不清除数据），用于切换场景时清除残留状态
+    resetFormState() {
+        // 重置所有 checkbox 多选按钮
+        document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.checked = false;
+        });
+
+        // 重置所有 radio 单选按钮
+        document.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radio.checked = false;
+        });
+
+        // 隐藏重复场景选择器
+        const selectorDiv = document.getElementById('div-repeat-selector');
+        if (selectorDiv) selectorDiv.classList.add('hidden');
+
+        // 隐藏"其他问题"输入框
+        const otherProblemDiv = document.getElementById('div-other-problem');
+        if (otherProblemDiv) otherProblemDiv.classList.add('hidden');
+
+        // 重置 is_repeat 为 false
+        document.querySelector('input[name="is_repeat"][value="false"]')?.click();
+    },
+
     checkDraft() {
         if (!this.sceneCode) return;
 
@@ -296,6 +322,12 @@ const FormView = {
         const roiSelected = document.querySelector('input[name="roi_judgment"]:checked');
         if (roiSelected) {
             data.roi_judgment = roiSelected.value;
+        }
+
+        // 评估结论 category（radio button）
+        const categorySelected = document.querySelector('input[name="category"]:checked');
+        if (categorySelected) {
+            data.category = categorySelected.value;
         }
 
         // 单选

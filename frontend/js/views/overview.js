@@ -198,12 +198,14 @@ const OverviewView = {
     },
 
     applyFilters() {
+        // 只使用当前选中的筛选条件，每次切换分类时其他筛选条件保持不变
         const filters = {};
         const dept = document.getElementById('filter-dept').value;
         const maturity = document.getElementById('filter-maturity').value;
         const lifecycle = document.getElementById('filter-lifecycle').value;
         const category = document.getElementById('filter-category').value;
 
+        // 如果有值才加入筛选条件
         if (dept) filters.source_dept = dept;
         if (maturity) filters.maturity_level = parseInt(maturity);
         if (lifecycle) filters.lifecycle_status = lifecycle;
